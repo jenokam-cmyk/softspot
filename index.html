@@ -10,22 +10,31 @@
         body { background: var(--bg); font-family: -apple-system, sans-serif; color: var(--text); display: flex; justify-content: center; margin: 0; min-height: 100vh; }
         .app { width: 100%; max-width: 400px; padding: 20px; box-sizing: border-box; }
         
-        /* Navigation Header */
         nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
         .logo { font-weight: bold; }
         .log-link { cursor: pointer; color: #757575; text-decoration: underline; font-size: 0.9rem; }
 
-        /* Screens */
         .screen { display: none; }
         .active { display: block; }
 
-        /* Mood Grid */
         .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .card { background: var(--white); border: 1px solid var(--accent); border-radius: 20px; padding: 25px 10px; cursor: pointer; text-align: center; }
         .card strong { display: block; margin-top: 5px; }
         .sub-text { display: block; font-weight: normal; font-size: 0.85rem; color: #757575; margin-top: 4px; }
 
-        /* Overlays */
+        /* Trends Section - Hidden by default */
+        #trends-container { 
+            display: none;
+            margin-top: 40px; 
+            padding: 20px; 
+            background: var(--white); 
+            border-radius: 20px; 
+            border: 1px solid var(--accent);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .trends-title { font-weight: bold; margin-bottom: 8px; display: block; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; color: #757575; }
+
         .overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(249, 248, 244, 0.98); z-index: 10; flex-direction: column; 
@@ -33,87 +42,4 @@
         }
         .survey-btn { background: var(--white); border: 1px solid var(--accent); padding: 15px; margin: 8px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; font-size: 1.1rem; }
         
-        /* History Items */
-        .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .back-btn { display: inline-block; margin-bottom: 20px; cursor: pointer; color: #757575; }
-        .cancel { margin-top: 25px; color: #757575; text-decoration: underline; font-size: 0.9rem; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-    <div class="app">
-        <nav>
-            <div class="logo">softspot</div>
-            <div class="log-link" onclick="showScreen('history-screen')">log</div>
-        </nav>
-
-        <div id="main-screen" class="screen active">
-            <h2>Hi! What's happening?</h2>
-            <div class="mood-grid">
-                <div class="card" onclick="openSurvey('bliss')">
-                    ✨ <br><strong>Bliss</strong>
-                    <span class="sub-text">I'm joyful</span>
-                </div>
-                <div class="card" onclick="openSurvey('overwhelm')">
-                    🌊 <br><strong>Overwhelm</strong>
-                    <span class="sub-text">A strong feeling</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="history-screen" class="screen">
-            <div class="back-btn" onclick="showScreen('main-screen')">← Back</div>
-            <h4>HISTORY</h4>
-            <div id="logs"></div>
-        </div>
-    </div>
-
-    <div id="survey-overwhelm" class="overlay">
-        <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Transition')">Transition</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Work')">Work</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Help from friend')">Help from friend</div>
-        <div class="cancel" onclick="closeSurveys()">Cancel</div>
-    </div>
-
-    <div id="survey-bliss" class="overlay">
-        <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Creating something')">Creating something</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Work')">Work</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Help from friend')">Help from friend</div>
-        <div class="cancel" onclick="closeSurveys()">Cancel</div>
-    </div>
-
-    <script>
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            if(screenId === 'history-screen') render();
-        }
-
-        function openSurvey(type) { document.getElementById('survey-' + type).style.display = 'flex'; }
-        function closeSurveys() { document.getElementById('survey-bliss').style.display = 'none'; document.getElementById('survey-overwhelm').style.display = 'none'; }
-
-        function finishLog(mood, reason) {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            let h = JSON.parse(localStorage.getItem('m')) || [];
-            h.unshift({ entry: `${mood} (${reason})`, time });
-            localStorage.setItem('m', JSON.stringify(h));
-            closeSurveys();
-            // Automatically stay on main screen, but you can see logs by clicking 'log'
-        }
-
-        function render() {
-            const h = JSON.parse(localStorage.getItem('m')) || [];
-            document.getElementById('logs').innerHTML = h.length ? h.map(i => 
-                `<div class="log-item"><strong>${i.entry}</strong> <span style="float:right; color:#757575;">${i.time}</span></div>`
-            ).join('') : '<p style="color:gray;">No logs yet.</p>';
-        }
-        
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-        render();
-    </script>
-</body>
-</html>
+        .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; box-shadow: 0 2px 4px rgba(0,0,0,0
