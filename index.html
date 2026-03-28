@@ -12,15 +12,17 @@
         
         nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
         .logo { font-weight: bold; }
-        .log-link { cursor: pointer; color: #757575; text-decoration: underline; font-size: 0.9rem; }
+        .log-link { cursor: pointer; color: #757575; text-decoration: underline; font-size: 0.9rem; z-index: 5; }
 
         .screen { display: none; }
         .active { display: block; }
 
         .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .card { background: var(--white); border: 1px solid var(--accent); border-radius: 20px; padding: 25px 10px; cursor: pointer; text-align: center; }
-        .card strong { display: block; margin-top: 5px; }
-        .sub-text { display: block; font-weight: normal; font-size: 0.85rem; color: #757575; margin-top: 4px; }
+        
+        .card-icon { display: block; font-size: 2.1rem; margin-bottom: 5px; pointer-events: none; }
+        .card strong { display: block; pointer-events: none; }
+        .sub-text { display: block; font-weight: normal; font-size: 0.85rem; color: #757575; margin-top: 4px; pointer-events: none; }
 
         #trends-container { 
             display: none; margin-top: 40px; padding: 20px; background: var(--white); 
@@ -35,11 +37,10 @@
         }
         .survey-btn { background: var(--white); border: 1px solid var(--accent); padding: 15px; margin: 8px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; font-size: 1.1rem; }
         
-        /* History Styling */
         .date-group { margin-top: 25px; }
         .date-header { font-size: 0.85rem; color: #757575; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
         .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .back-btn { display: inline-block; margin-bottom: 20px; cursor: pointer; color: #757575; }
+        .back-btn { display: inline-block; margin-bottom: 20px; cursor: pointer; color: #757575; padding: 10px 0; }
         .cancel { margin-top: 25px; color: #757575; text-decoration: underline; font-size: 0.9rem; cursor: pointer; }
     </style>
 </head>
@@ -55,11 +56,13 @@
             <h2>Hi! What's happening?</h2>
             <div class="mood-grid">
                 <div class="card" onclick="openSurvey('bliss')">
-                    ✨ <br><strong>Bliss</strong>
+                    <span class="card-icon">✨</span>
+                    <strong>Bliss</strong>
                     <span class="sub-text">I'm joyful</span>
                 </div>
                 <div class="card" onclick="openSurvey('overwhelm')">
-                    🌊 <br><strong>Overwhelm</strong>
+                    <span class="card-icon">🌊</span>
+                    <strong>Overwhelm</strong>
                     <span class="sub-text">A strong feeling</span>
                 </div>
             </div>
@@ -105,7 +108,6 @@
         function closeSurveys() { document.getElementById('survey-bliss').style.display = 'none'; document.getElementById('survey-overwhelm').style.display = 'none'; }
 
         function formatTime(dateObj) {
-            // Strips leading zeros from the hour
             return dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         }
 
@@ -125,6 +127,7 @@
             const today = new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
             const todayLogs = h.filter(log => log.date === today);
             const container = document.getElementById('trends-container');
+            if (!container) return;
             if (todayLogs.length === 0) { container.style.display = 'none'; return; }
             container.style.display = 'block';
             const blissCount = todayLogs.filter(log => log.moodType === 'Bliss').length;
@@ -140,7 +143,6 @@
             const logContainer = document.getElementById('logs');
             if (!h.length) { logContainer.innerHTML = '<p style="color:gray;">No logs yet.</p>'; return; }
 
-            // Grouping logic
             const groups = h.reduce((acc, log) => {
                 if (!acc[log.date]) acc[log.date] = [];
                 acc[log.date].push(log);
