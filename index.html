@@ -81,4 +81,103 @@
         <h3>What's happening?</h3>
         <div class="survey-btn" onclick="finishLog('Overwhelm', 'Transition')">Transition</div>
         <div class="survey-btn" onclick="finishLog('Overwhelm', 'Work')">Work</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm',
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Memory')">Memory</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Connection & Catharsis')">Connection & Catharsis</div>
+        <div class="cancel" onclick="closeSurveys()">Cancel</div>
+    </div>
+
+    <div id="survey-bliss" class="overlay">
+        <h3>What's happening?</h3>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Creating something')">Creating something</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Work')">Work</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Memory')">Memory</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Help from friend')">Help from friend</div>
+        <div class="cancel" onclick="closeSurveys()">Cancel</div>
+    </div>
+
+    <script>
+        // MIGRATION SCRIPT: Moves data from old names to new names
+        function migrate() {
+            const oldData = localStorage.getItem('m');
+            const newData = localStorage.getItem('softspot_logs');
+            if (oldData && !newData) {
+                try {
+                    const parsed = JSON.parse(oldData);
+                    const converted = parsed.map(l => {
+                        // Extract mood and reason from old string "Bliss (Work)"
+                        let mood = "Bliss";
+                        let reason = "Work";
+                        if(l.entry && l.entry.includes('(')) {
+                            mood = l.entry.split(' (')[0];
+                            reason = l.entry.split(' (')[1].replace(')', '');
+                        }
+                        return { mood, reason, time: l.time, date: l.date };
+                    });
+                    localStorage.setItem('softspot_logs', JSON.stringify(converted));
+                } catch(e) { console.error("Migration failed", e); }
+            }
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'history-screen') renderHistory();
+            if(id === 'main-screen') updateTrends();
+        }
+
+        function openSurvey(type) { document.getElementById('survey-' + type).style.display = 'flex'; }
+        function closeSurveys() { 
+            document.getElementById('survey-bliss').style.display = 'none'; 
+            document.getElementById('survey-overwhelm').style.display = 'none'; 
+        }
+
+        function finishLog(mood, reason) {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const date = now.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+            let h = JSON.parse(localStorage.getItem('softspot_logs')) || [];
+            h.unshift({ mood, reason, time, date });
+            localStorage.setItem('softspot_logs', JSON.stringify(h));
+            closeSurveys();
+            updateTrends();
+        }
+
+        function updateTrends() {
+            const h = JSON.parse(localStorage.getItem('softspot_logs')) || [];
+            const today = new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+            const todayLogs = h.filter(l => l.date === today);
+            const container = document.getElementById('trends-container');
+            const content = document.getElementById('trends-content');
+            if (todayLogs.length === 0) { container.style.display = 'none'; return; }
+            container.style.display = 'block';
+            const b = todayLogs.filter(l => l.mood === 'Bliss').length;
+            const o = todayLogs.filter(l => l.mood === 'Overwhelm').length;
+            let msg = `So far today, you were Blissful ${b} times and Overwhelmed ${o} times.`;
+            if (b > o) msg += " <strong>This is a great day!</strong>";
+            else if (b === o) msg += " <br><br>Sounds like an ordinary day. Keep showing up, friend!";
+            else msg += " <br><br><em>It's just a moment. Maybe time for an adjustment?</em>";
+            content.innerHTML = msg;
+        }
+
+        function renderHistory() {
+            const h = JSON.parse(localStorage.getItem('softspot_logs')) || [];
+            const list = document.getElementById('logs-list');
+            if (h.length === 0) { list.innerHTML = '<p style="color:gray; text-align:center;">No logs yet.</p>'; return; }
+            const groups = h.reduce((acc, log) => {
+                if (!acc[log.date]) acc[log.date] = [];
+                acc[log.date].push(log);
+                return acc;
+            }, {});
+            list.innerHTML = Object.keys(groups).map(date => `
+                <div class="date-group">
+                    <div class="date-header">${date}</div>
+                    ${groups[date].map(l => `<div class="log-item"><strong>${l.mood} (${l.reason})</strong><span style="float:right; color:#757575;">${l.time}</span></div>`).join('')}
+                </div>`).join('');
+        }
+
+        // Run on load
+        migrate();
+        updateTrends();
+    </script>
+</body>
+</html>
