@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <title>Softspot</title>
+    <style>
+        :root { --bg: #F9F8F4; --text: #2D2D2D; --sub: #757575; --accent: #E6E2D3; }
+        body { background: var(--bg); font-family: sans-serif; color: var(--text); display: flex; justify-content: center; margin: 0; }
+        .app { width: 100%; max-width: 400px; padding: 20px; }
+        nav { display: flex; gap: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
+        .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card { background: white; border: 1px solid var(--accent); border-radius: 20px; padding: 20px; cursor: pointer; }
+        .history { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <nav><strong>soft<span>spot</span></strong> <span>log</span></nav>
+        <h2>Good morning.</h2>
+        <div class="mood-grid">
+            <div class="card" onclick="logMood('Bliss')">✨ <h3>Bliss</h3><p>Felt good</p></div>
+            <div class="card" onclick="logMood('Overwhelm')">🌊 <h3>Overwhelm</h3><p>Too much</p></div>
+        </div>
+        <div class="history"><h4>TODAY</h4><div id="logs"></div></div>
+    </div>
+
+    <script>
+        function logMood(m) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            let h = JSON.parse(localStorage.getItem('m')) || [];
+            h.unshift({ m, time });
+            localStorage.setItem('m', JSON.stringify(h));
+            render();
+        }
+        function render() {
+            const h = JSON.parse(localStorage.getItem('m')) || [];
+            document.getElementById('logs').innerHTML = h.map(i => `<p><strong>${i.m}</strong> at ${i.time}</p>`).join('');
+        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+        render();
+    </script>
+</body>
+</html>
