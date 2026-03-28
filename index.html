@@ -2,154 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Softspot Recovery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Softspot</title>
+    
+    <link rel="icon" type="image/svg+xml" href="icon.svg?v=3">
+    <link rel="apple-touch-icon" href="icon.svg?v=3">
+    <link rel="manifest" href="manifest.json?v=3">
+
     <style>
         :root { --bg: #F9F8F4; --text: #2D2D2D; --accent: #E6E2D3; --white: #ffffff; }
-        body { background: var(--bg); font-family: -apple-system, sans-serif; color: var(--text); margin: 0; padding: 0; }
-        .app { width: 100%; max-width: 400px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+        body { background: var(--bg); font-family: -apple-system, sans-serif; color: var(--text); margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        .app { width: 100%; max-width: 400px; margin: 0 auto; padding: 20px; box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; }
         
-        /* EMERGENCY BUTTON */
-        #reset-btn { background: #ff4444; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; font-weight: bold; margin-bottom: 20px; cursor: pointer; }
-
         nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
         .brand { display: flex; align-items: center; gap: 8px; font-weight: bold; }
-        .nav-logo { width: 1.2rem; height: 1.2rem; }
-        .log-link { cursor: pointer; color: #757575; text-decoration: underline; font-size: 0.9rem; }
+        .nav-logo { width: 1.2rem; height: 1.2rem; object-fit: contain; }
+        .log-link { cursor: pointer; color: #757575; text-decoration: underline; font-size: 0.9rem; padding: 5px; }
 
-        .screen { display: none; }
+        .screen { display: none; flex-grow: 1; }
         .active { display: block; }
 
         .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .card { background: var(--white); border: 1px solid var(--accent); border-radius: 20px; padding: 25px 10px; cursor: pointer; text-align: center; }
+        
         .card-icon { display: block; font-size: 2.1rem; margin-bottom: 5px; pointer-events: none; }
+        .card strong { display: block; pointer-events: none; }
+        .sub-text { display: block; font-weight: normal; font-size: 0.85rem; color: #757575; margin-top: 4px; pointer-events: none; }
 
-        #trends-container { display: none; margin-top: 40px; padding: 20px; background: var(--white); border-radius: 20px; border: 1px solid var(--accent); }
+        #trends-container { display: none; margin-top: 40px; padding: 20px; background: var(--white); border-radius: 20px; border: 1px solid var(--accent); font-size: 0.95rem; }
         .trends-title { font-weight: bold; margin-bottom: 8px; display: block; text-transform: uppercase; font-size: 0.75rem; color: #757575; }
 
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(249,248,244,0.98); z-index: 1000; flex-direction: column; justify-content: center; align-items: center; }
-        .survey-btn { background: var(--white); border: 1px solid var(--accent); padding: 15px; margin: 8px; border-radius: 15px; width: 85%; text-align: center; cursor: pointer; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(249, 248, 244, 0.98); z-index: 100; flex-direction: column; justify-content: center; align-items: center; }
+        .survey-btn { background: var(--white); border: 1px solid var(--accent); padding: 15px; margin: 8px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; font-size: 1.1rem; cursor: pointer; }
+        .cancel { margin-top: 25px; color: #757575; text-decoration: underline; cursor: pointer; }
         
+        .date-group { margin-top: 25px; }
+        .date-header { font-size: 0.85rem; color: #757575; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 10px; }
         .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; display: flex; justify-content: space-between; }
-        .back-btn { margin-bottom: 20px; cursor: pointer; text-decoration: underline; color: #757575; display: inline-block; }
-    </style>
-</head>
-<body>
-
-    <div class="app">
-        <button id="reset-btn" onclick="clearEverything()">⚠️ RECOVERY: CLEAR ALL DATA & RESET</button>
-
-        <nav>
-            <div class="brand"><img src="icon.svg" class="nav-logo"> <span>softspot</span></div>
-            <div class="log-link" onclick="showScreen('history-screen')">log</div>
-        </nav>
-
-        <div id="main-screen" class="screen active">
-            <h2>Hi! What's happening?</h2>
-            <div class="mood-grid">
-                <div class="card" onclick="openSurvey('bliss')"><span class="card-icon">✨</span><strong>Bliss</strong></div>
-                <div class="card" onclick="openSurvey('overwhelm')"><span class="card-icon">🌊</span><strong>Overwhelm</strong></div>
-            </div>
-            <div id="trends-container">
-                <span class="trends-title">Today's Perspective</span>
-                <div id="trends-content"></div>
-            </div>
-        </div>
-
-        <div id="history-screen" class="screen">
-            <div class="back-btn" onclick="showScreen('main-screen')">← Back Home</div>
-            <div id="logs-list"></div>
-        </div>
-    </div>
-
-    <div id="survey-overwhelm" class="overlay">
-        <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Transition')">Transition</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Work')">Work</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Connection')">Connection</div>
-        <div class="cancel" onclick="closeSurveys()">Cancel</div>
-    </div>
-
-    <div id="survey-bliss" class="overlay">
-        <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Creating')">Creating</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Work')">Work</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Help')">Help</div>
-        <div class="cancel" onclick="closeSurveys()">Cancel</div>
-    </div>
-
-    <script>
-        const KEY = 'softspot_logs';
-
-        function clearEverything() {
-            if(confirm("This will delete all your history to fix the freeze. Continue?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 'history-screen') renderHistory();
-            if(id === 'main-screen') updateTrends();
-        }
-
-        function openSurvey(type) { document.getElementById('survey-' + type).style.display = 'flex'; }
-        function closeSurveys() { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); }
-
-        function finishLog(mood, reason) {
-            const now = new Date();
-            const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            const date = now.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
-            
-            let h = JSON.parse(localStorage.getItem(KEY)) || [];
-            h.unshift({ mood, reason, time, date });
-            localStorage.setItem(KEY, JSON.stringify(h));
-            
-            closeSurveys();
-            updateTrends();
-        }
-
-        function updateTrends() {
-            const container = document.getElementById('trends-container');
-            const content = document.getElementById('trends-content');
-            const h = JSON.parse(localStorage.getItem(KEY)) || [];
-            const today = new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
-            const todayLogs = h.filter(l => l.date === today);
-
-            if (todayLogs.length === 0) { container.style.display = 'none'; return; }
-            container.style.display = 'block';
-
-            const b = todayLogs.filter(l => l.mood === 'Bliss').length;
-            const o = todayLogs.filter(l => l.mood === 'Overwhelm').length;
-            
-            const counts = {};
-            todayLogs.forEach(l => { counts[l.reason] = (counts[l.reason] || 0) + 1; });
-            let max = 0, most = "";
-            for (let r in counts) { if (counts[r] > max) { max = counts[r]; most = r; } }
-
-            let freq = (max > 3) ? `The thing happening most is ${most}, ${max} times today.<br><br>` : "";
-            content.innerHTML = freq + `So far today, you were Blissful ${b} times and Overwhelmed ${o} times.`;
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('logs-list');
-            const h = JSON.parse(localStorage.getItem(KEY)) || [];
-            if (h.length === 0) { list.innerHTML = '<p>No logs yet.</p>'; return; }
-            
-            list.innerHTML = h.map(l => `
-                <div class="log-item">
-                    <span><strong>${l.mood}</strong> (${l.reason})</span>
-                    <span style="color:#757575;">${l.time}</span>
-                </div>
-            `).join('');
-        }
-
-        // Run summary on load
-        updateTrends();
-    </script>
-</body>
-</html>
+        .back-btn { display:
