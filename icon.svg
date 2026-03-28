@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Soft yellow → gold background -->
+    <radialGradient id="bg" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#FFF4B8"/>
+      <stop offset="60%" stop-color="#FFE08A"/>
+      <stop offset="100%" stop-color="#E6C36A"/>
+    </radialGradient>
+
+    <!-- Yellow-leaning orange heart -->
+    <linearGradient id="heartFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD27A"/>
+      <stop offset="100%" stop-color="#F4A261"/>
+    </linearGradient>
+
+    <!-- Soft glow -->
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="256" cy="256" r="240" fill="url(#bg)" />
+
+  <!-- Larger, fuller heart -->
+  <path d="
+    M256 360
+    C210 320, 150 280, 150 220
+    C150 175, 185 150, 220 150
+    C245 150, 256 175, 256 175
+    C256 175, 267 150, 292 150
+    C327 150, 362 175, 362 220
+    C362 280, 302 320, 256 360
+    Z"
+    fill="url(#heartFill)"
+    filter="url(#softGlow)"/>
+</svg>
