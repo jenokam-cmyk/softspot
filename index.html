@@ -83,4 +83,88 @@
     <div id="survey-overwhelm" class="overlay">
         <h3>What's happening?</h3>
         <div class="survey-btn" onclick="finishLog('Overwhelm', 'Transition')">Transition</div>
-        <div class="survey-btn" onclick="finishLog('
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Work')">Work</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Memory')">Memory</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Help from friend')">Help from friend</div>
+        <div class="cancel" onclick="closeSurveys()">Cancel</div>
+    </div>
+
+    <div id="survey-bliss" class="overlay">
+        <h3>What's happening?</h3>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Creating something')">Creating something</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Work')">Work</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Memory')">Memory</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Help from friend')">Help from friend</div>
+        <div class="cancel" onclick="closeSurveys()">Cancel</div>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId === 'history-screen') renderHistory();
+            if(screenId === 'main-screen') updateTrends();
+        }
+
+        function openSurvey(type) { document.getElementById('survey-' + type).style.display = 'flex'; }
+        function closeSurveys() { document.getElementById('survey-bliss').style.display = 'none'; document.getElementById('survey-overwhelm').style.display = 'none'; }
+
+        function formatTime(dateObj) {
+            return dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function finishLog(mood, reason) {
+            const now = new Date();
+            const time = formatTime(now);
+            const date = now.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' }); 
+            let h = JSON.parse(localStorage.getItem('m')) || [];
+            h.unshift({ entry: `${mood} (${reason})`, time, date, moodType: mood });
+            localStorage.setItem('m', JSON.stringify(h));
+            closeSurveys();
+            updateTrends();
+        }
+
+        function updateTrends() {
+            const h = JSON.parse(localStorage.getItem('m')) || [];
+            const today = new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+            const todayLogs = h.filter(log => log.date === today);
+            const container = document.getElementById('trends-container');
+            if (todayLogs.length === 0) { container.style.display = 'none'; return; }
+            container.style.display = 'block';
+            const blissCount = todayLogs.filter(log => log.moodType === 'Bliss').length;
+            const overwhelmCount = todayLogs.filter(log => log.moodType === 'Overwhelm').length;
+            let message = `So far today, you were Blissful ${blissCount} times and Overwhelmed ${overwhelmCount} times.`;
+            if (blissCount > overwhelmCount) { message += " <strong>This is a great day!</strong>"; }
+            else if (overwhelmCount > 0) { message += " <br><br><em>It's just a moment. Maybe time for an adjustment?</em>"; }
+            document.getElementById('trends-content').innerHTML = message;
+        }
+
+        function renderHistory() {
+            const h = JSON.parse(localStorage.getItem('m')) || [];
+            const logContainer = document.getElementById('logs');
+            if (!h.length) { logContainer.innerHTML = '<p style="color:gray;">No logs yet.</p>'; return; }
+
+            const groups = h.reduce((acc, log) => {
+                if (!acc[log.date]) acc[log.date] = [];
+                acc[log.date].push(log);
+                return acc;
+            }, {});
+
+            logContainer.innerHTML = Object.keys(groups).map(date => `
+                <div class="date-group">
+                    <div class="date-header">${date}</div>
+                    ${groups[date].map(i => `
+                        <div class="log-item">
+                            <strong>${i.entry}</strong> 
+                            <span style="float:right; color:#757575;">${i.time}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+        
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+        updateTrends();
+    </script>
+</body>
+</html>
