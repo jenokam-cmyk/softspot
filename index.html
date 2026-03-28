@@ -11,18 +11,20 @@
 
     <style>
         :root { --bg: #F9F8F4; --text: #2D2D2D; --accent: #E6E2D3; --white: #ffffff; }
-        body { background: var(--bg); font-family: -apple-system, sans-serif; color: var(--text); margin: 0; padding: 0; overflow-x: hidden; }
+        body { background: var(--bg); font-family: -apple-system, sans-serif; color: var(--text); margin: 0; padding: 0; }
         .app { width: 100%; max-width: 400px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
         
         nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
-        .logo { font-weight: bold; }
+        .brand { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .nav-logo { width: 1.2rem; height: 1.2rem; object-fit: contain; }
+        
         .log-link { cursor: pointer; color: #757575; text-decoration: underline; font-size: 0.9rem; padding: 5px; }
 
         .screen { display: none; }
         .active { display: block; }
 
         .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card { background: var(--white); border: 1px solid var(--accent); border-radius: 20px; padding: 25px 10px; cursor: pointer; text-align: center; }
+        .card { background: var(--white); border: 1px solid var(--accent); border-radius: 20px; padding: 25px 10px; cursor: pointer; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         
         .card-icon { display: block; font-size: 2.1rem; margin-bottom: 5px; pointer-events: none; }
         .card strong { display: block; pointer-events: none; }
@@ -36,14 +38,14 @@
 
         .overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(249, 248, 244, 0.98); z-index: 100; flex-direction: column; 
+            background: rgba(249, 248, 244, 0.98); z-index: 1000; flex-direction: column; 
             justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
         .survey-btn { background: var(--white); border: 1px solid var(--accent); padding: 15px; margin: 8px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; font-size: 1.1rem; cursor: pointer; }
         
         .date-group { margin-top: 25px; }
         .date-header { font-size: 0.85rem; color: #757575; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-        .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
         .back-btn { display: inline-block; margin-bottom: 20px; cursor: pointer; color: #757575; padding: 10px 0; text-decoration: underline; }
         .cancel { margin-top: 25px; color: #757575; text-decoration: underline; font-size: 0.9rem; cursor: pointer; }
     </style>
@@ -52,19 +54,22 @@
 
     <div class="app">
         <nav>
-            <div class="logo">softspot</div>
-            <div class="log-link" onclick="showScreen('history-screen')">log</div>
+            <div class="brand">
+                <img src="icon.svg" alt="" class="nav-logo">
+                <span>softspot</span>
+            </div>
+            <div class="log-link" id="nav-log-btn">log</div>
         </nav>
 
         <div id="main-screen" class="screen active">
             <h2>Hi! What's happening?</h2>
             <div class="mood-grid">
-                <div class="card" onclick="openSurvey('bliss')">
+                <div class="card" id="btn-bliss">
                     <span class="card-icon">✨</span>
                     <strong>Bliss</strong>
                     <span class="sub-text">I'm joyful</span>
                 </div>
-                <div class="card" onclick="openSurvey('overwhelm')">
+                <div class="card" id="btn-overwhelm">
                     <span class="card-icon">🌊</span>
                     <strong>Overwhelm</strong>
                     <span class="sub-text">A strong feeling</span>
@@ -77,85 +82,128 @@
         </div>
 
         <div id="history-screen" class="screen">
-            <div class="back-btn" onclick="showScreen('main-screen')">← Back Home</div>
+            <div class="back-btn" id="btn-back">← Back Home</div>
             <div id="logs-list"></div>
         </div>
     </div>
 
     <div id="survey-overwhelm" class="overlay">
         <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Transition')">Transition</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Work')">Work</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Connection & Catharsis')">Connection & Catharsis</div>
+        <div class="survey-btn" data-mood="Overwhelm" data-reason="Transition">Transition</div>
+        <div class="survey-btn" data-mood="Overwhelm" data-reason="Work">Work</div>
+        <div class="survey-btn" data-mood="Overwhelm" data-reason="Memory">Memory</div>
+        <div class="survey-btn" data-mood="Overwhelm" data-reason="Connection & Catharsis">Connection & Catharsis</div>
         <div class="cancel" onclick="closeSurveys()">Cancel</div>
     </div>
 
     <div id="survey-bliss" class="overlay">
         <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Creating something')">Creating something</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Work')">Work</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Help from friend')">Help from friend</div>
+        <div class="survey-btn" data-mood="Bliss" data-reason="Creating something">Creating something</div>
+        <div class="survey-btn" data-mood="Bliss" data-reason="Work">Work</div>
+        <div class="survey-btn" data-mood="Bliss" data-reason="Memory">Memory</div>
+        <div class="survey-btn" data-mood="Bliss" data-reason="Help from friend">Help from friend</div>
         <div class="cancel" onclick="closeSurveys()">Cancel</div>
     </div>
 
     <script>
         const STORAGE_KEY = 'softspot_logs';
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const target = document.getElementById(id);
-            if(target) {
-                target.classList.add('active');
-                if(id === 'history-screen') renderHistory();
-                if(id === 'main-screen') updateTrends();
+        // 1. DATA ACCESS
+        function getLogs() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                const parsed = data ? JSON.parse(data) : [];
+                // Filter out any entries missing critical info or marked "undefined"
+                return parsed.filter(l => l && l.mood && l.date && l.date !== "undefined");
+            } catch (e) {
+                console.error("Critical: Data corruption detected.", e);
+                return [];
             }
         }
 
-        function openSurvey(type) {
-            const el = document.getElementById('survey-' + type);
-            if(el) el.style.display = 'flex';
+        // 2. SCREEN LOGIC
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.classList.add('active');
+                if (screenId === 'history-screen') renderHistory();
+                if (screenId === 'main-screen') updateTrends();
+            }
+        }
+
+        // 3. LOGGING LOGIC
+        function finishLog(mood, reason) {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const date = now.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+            
+            const logs = getLogs();
+            logs.unshift({ mood, reason, time, date });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+            
+            closeSurveys();
+            updateTrends();
         }
 
         function closeSurveys() {
             document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
         }
 
-        function finishLog(mood, reason) {
-            const now = new Date();
-            const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            const date = now.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
-            
-            try {
-                let h = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-                h.unshift({ mood, reason, time, date });
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
-            } catch(e) { console.error(e); }
-            
-            closeSurveys();
-            updateTrends();
-        }
-
+        // 4. TRENDS/SUMMARY LOGIC
         function updateTrends() {
             const container = document.getElementById('trends-container');
             const content = document.getElementById('trends-content');
-            if(!container || !content) return;
+            if (!container || !content) return;
 
-            try {
-                const h = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-                const today = new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
-                const todayLogs = h.filter(l => l && l.date === today);
+            const allLogs = getLogs();
+            const todayStr = new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+            const todayLogs = allLogs.filter(l => l.date === todayStr);
 
-                if (todayLogs.length === 0) {
-                    container.style.display = 'none';
-                    return;
-                }
+            if (todayLogs.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
 
-                container.style.display = 'block';
-                const bCount = todayLogs.filter(l => l.mood === 'Bliss').length;
-                const oCount = todayLogs.filter(l => l.mood === 'Overwhelm').length;
+            container.style.display = 'block';
+            const b = todayLogs.filter(l => l.mood === 'Bliss').length;
+            const o = todayLogs.filter(l => l.mood === 'Overwhelm').length;
 
-                // Count frequencies of reasons
-                const counts = {};
-                todayLogs.forEach(l
+            // Frequency Logic
+            const counts = {};
+            todayLogs.forEach(l => { counts[l.reason] = (counts[l.reason] || 0) + 1; });
+            
+            let maxVal = 0, mostFreq = "";
+            for (let r in counts) { if (counts[r] > maxVal) { maxVal = counts[r]; mostFreq = r; } }
+
+            let freqLine = (maxVal > 3) ? `The thing happening most is ${mostFreq}, ${maxVal} times today.<br><br>` : "";
+            let summaryLine = `So far today, you were Blissful ${b} times and Overwhelmed ${o} times.`;
+            let feedback = b > o ? " <strong>This is a great day!</strong>" : (b === o ? " <br><br>Sounds like an ordinary day." : " <br><br><em>It's just a moment.</em>");
+
+            content.innerHTML = freqLine + summaryLine + feedback;
+        }
+
+        // 5. HISTORY LOGIC
+        function renderHistory() {
+            const list = document.getElementById('logs-list');
+            if (!list) return;
+
+            const logs = getLogs();
+            if (logs.length === 0) {
+                list.innerHTML = '<p style="color:gray; text-align:center; padding-top:20px;">No logs yet.</p>';
+                return;
+            }
+
+            const groups = logs.reduce((acc, log) => {
+                if (!acc[log.date]) acc[log.date] = [];
+                acc[log.date].push(log);
+                return acc;
+            }, {});
+
+            list.innerHTML = Object.keys(groups).map(date => `
+                <div class="date-group">
+                    <div class="date-header">${date}</div>
+                    ${groups[date].map(l => `
+                        <div class="log-item">
+                            <span><strong>${l.mood}</strong> (${l.reason})</span>
+                            <span style="color:#757575; font-size:0.85rem;">${l.time}</span>
