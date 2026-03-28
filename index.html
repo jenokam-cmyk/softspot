@@ -11,8 +11,8 @@
 
     <style>
         :root { --bg: #F9F8F4; --text: #2D2D2D; --accent: #E6E2D3; --white: #ffffff; }
-        body { background: var(--bg); font-family: -apple-system, sans-serif; color: var(--text); display: flex; justify-content: center; margin: 0; min-height: 100vh; }
-        .app { width: 100%; max-width: 400px; padding: 20px; box-sizing: border-box; }
+        body { background: var(--bg); font-family: -apple-system, sans-serif; color: var(--text); margin: 0; padding: 0; overflow-x: hidden; }
+        .app { width: 100%; max-width: 400px; margin: 0 auto; padding: 20px; box-sizing: border-box; }
         
         nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
         .logo { font-weight: bold; }
@@ -36,14 +36,14 @@
 
         .overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(249, 248, 244, 0.98); z-index: 10; flex-direction: column; 
+            background: rgba(249, 248, 244, 0.98); z-index: 100; flex-direction: column; 
             justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
         .survey-btn { background: var(--white); border: 1px solid var(--accent); padding: 15px; margin: 8px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; font-size: 1.1rem; cursor: pointer; }
         
         .date-group { margin-top: 25px; }
         .date-header { font-size: 0.85rem; color: #757575; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
-        .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; }
+        .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .back-btn { display: inline-block; margin-bottom: 20px; cursor: pointer; color: #757575; padding: 10px 0; text-decoration: underline; }
         .cancel { margin-top: 25px; color: #757575; text-decoration: underline; font-size: 0.9rem; cursor: pointer; }
     </style>
@@ -101,47 +101,32 @@
     </div>
 
     <script>
-        function getSafeLogs() {
-            try {
-                const raw = localStorage.getItem('softspot_logs');
-                return raw ? JSON.parse(raw) : [];
-            } catch (e) {
-                console.error("Data corrupted", e);
-                return [];
-            }
-        }
-
-        function migrate() {
-            const oldData = localStorage.getItem('m');
-            const newData = localStorage.getItem('softspot_logs');
-            if (oldData && !newData) {
-                try {
-                    const parsed = JSON.parse(oldData);
-                    const converted = parsed
-                        .filter(l => l && l.date && l.date !== "undefined")
-                        .map(l => {
-                            let mood = "Bliss";
-                            let reason = "General";
-                            if(l.entry && l.entry.includes('(')) {
-                                mood = l.entry.split(' (')[0];
-                                reason = l.entry.split(' (')[1].replace(')', '');
-                            }
-                            return { mood, reason, time: l.time || "--", date: l.date };
-                        });
-                    localStorage.setItem('softspot_logs', JSON.stringify(converted));
-                } catch(e) { console.error("Migration failed", e); }
-            }
-        }
+        // Use a single, reliable storage key
+        const STORAGE_KEY = 'softspot_logs';
 
         function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => s.classList.remove('active'));
             const target = document.getElementById(id);
-            if (target) {
+            if(target) {
                 target.classList.add('active');
                 if(id === 'history-screen') renderHistory();
                 if(id === 'main-screen') updateTrends();
             }
         }
 
-        function openSurvey(type) { 
+        function openSurvey(type) {
             const el = document.getElementById('survey-' + type);
+            if(el) el.style.display = 'flex';
+        }
+
+        function closeSurveys() {
+            document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
+        }
+
+        function finishLog(mood, reason) {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            const date = now.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+            
+            try {
