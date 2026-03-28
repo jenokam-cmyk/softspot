@@ -49,7 +49,7 @@
     <div class="app">
         <nav>
             <div class="logo">softspot</div>
-            <div class="log-link" onclick="showScreen('history-screen')">log</div>
+            <div id="log-trigger" class="log-link" onclick="showScreen('history-screen')">log</div>
         </nav>
 
         <div id="main-screen" class="screen active">
@@ -79,4 +79,9 @@
     </div>
 
     <div id="survey-overwhelm" class="overlay">
-        <h3>
+        <h3>What's happening?</h3>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Transition')">Transition</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Work')">Work</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Memory')">Memory</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Connection & Catharsis')">Connection & Catharsis</div>
+        <div class="cancel" onclick="close
