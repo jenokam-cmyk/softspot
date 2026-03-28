@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Softspot</title>
     
-    <link rel="icon" type="image/svg+xml" href="icon.svg?v=5">
-    <link rel="apple-touch-icon" href="icon.svg?v=5">
-    <link rel="manifest" href="manifest.json?v=5">
+    <link rel="icon" type="image/svg+xml" href="icon.svg?v=6">
+    <link rel="apple-touch-icon" href="icon.svg?v=6">
+    <link rel="manifest" href="manifest.json?v=6">
 
     <style>
         :root { --bg: #F9F8F4; --text: #2D2D2D; --accent: #E6E2D3; --white: #ffffff; }
@@ -50,18 +50,18 @@
     <div class="app">
         <nav>
             <div class="brand"><img src="icon.svg" class="nav-logo"><span>softspot</span></div>
-            <div class="log-link" onclick="showScreen('history-screen')">log</div>
+            <div class="log-link" onclick="window.showScreen('history-screen')">log</div>
         </nav>
 
         <div id="main-screen" class="screen active">
             <h2>Hi! What's happening?</h2>
             <div class="mood-grid">
-                <div class="card" onclick="openSurvey('bliss')">
+                <div class="card" onclick="window.openSurvey('bliss')">
                     <span class="card-icon">✨</span>
                     <strong>Bliss</strong>
                     <span class="sub-text">I'm joyful</span>
                 </div>
-                <div class="card" onclick="openSurvey('overwhelm')">
+                <div class="card" onclick="window.openSurvey('overwhelm')">
                     <span class="card-icon">🌊</span>
                     <strong>Overwhelm</strong>
                     <span class="sub-text">A strong feeling</span>
@@ -74,53 +74,182 @@
         </div>
 
         <div id="history-screen" class="screen">
-            <div class="back-btn" onclick="showScreen('main-screen')">← Back Home</div>
+            <div class="back-btn" onclick="window.showScreen('main-screen')">← Back Home</div>
             <div id="logs-list"></div>
         </div>
 
         <div class="reset-wrapper">
-            <button id="reset-btn" onclick="clearEverything()">Reset</button>
+            <button id="reset-btn" onclick="window.clearEverything()">Reset</button>
         </div>
     </div>
 
     <div id="survey-overwhelm" class="overlay">
         <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Transition')">Transition</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Work')">Work</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Connection')">Connection</div>
-        <div class="cancel" onclick="closeSurveys()">Cancel</div>
+        <div class="survey-btn" onclick="window.finishLog('Overwhelm', 'Transition')">Transition</div>
+        <div class="survey-btn" onclick="window.finishLog('Overwhelm', 'Work')">Work</div>
+        <div class="survey-btn" onclick="window.finishLog('Overwhelm', 'Memory')">Memory</div>
+        <div class="survey-btn" onclick="window.finishLog('Overwhelm', 'Connection')">Connection</div>
+        <div class="cancel" onclick="window.closeSurveys()">Cancel</div>
     </div>
 
     <div id="survey-bliss" class="overlay">
         <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Creating')">Creating</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Work')">Work</div>
+        <div class="survey-btn" onclick="window.finishLog('Bliss', 'Creating')">Creating</div>
+        <div class="survey-btn" onclick="window.finishLog('Bliss', 'Work')">Work</div>
         <div class="survey-btn" onclick="finishLog('Bliss', 'Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishLog('Bliss', 'Help')">Help</div>
-        <div class="cancel" onclick="closeSurveys()">Cancel</div>
+        <div class="survey-btn" onclick="window.finishLog('Bliss', 'Help')">Help</div>
+        <div class="cancel" onclick="window.closeSurveys()">Cancel</div>
     </div>
 
     <script>
-        const KEY = 'softspot_logs';
+        (function() {
+            var KEY = 'softspot_logs';
 
-        function clearEverything() {
-            if(confirm("Reset the app? History will be cleared.")) {
-                localStorage.clear();
-                location.reload();
+            window.clearEverything = function() {
+                if(confirm("Reset the app? History will be cleared.")) {
+                    localStorage.clear();
+                    window.location.reload();
+                }
+            };
+
+            window.showScreen = function(id) {
+                var screens = document.querySelectorAll('.screen');
+                for (var i = 0; i < screens.length; i++) {
+                    screens[i].classList.remove('active');
+                }
+                var target = document.getElementById(id);
+                if(target) {
+                    target.classList.add('active');
+                    if(id === 'history-screen') renderHistory();
+                    if(id === 'main-screen') updateTrends();
+                }
+            };
+
+            window.openSurvey = function(type) {
+                var el = document.getElementById('survey-' + type);
+                if(el) el.style.display = 'flex';
+            };
+
+            window.closeSurveys = function() {
+                var overlays = document.querySelectorAll('.overlay');
+                for (var i = 0; i < overlays.length; i++) {
+                    overlays[i].style.display = 'none';
+                }
+            };
+
+            window.finishLog = function(mood, reason) {
+                var now = new Date();
+                var time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                var date = now.toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+                
+                var h = [];
+                try { 
+                    var data = localStorage.getItem(KEY);
+                    h = data ? JSON.parse(data) : []; 
+                } catch(e) { h = []; }
+                
+                h.unshift({ mood: mood, reason: reason, time: time, date: date });
+                localStorage.setItem(KEY, JSON.stringify(h));
+                
+                window.closeSurveys();
+                updateTrends();
+            };
+
+            function updateTrends() {
+                var container = document.getElementById('trends-container');
+                var content = document.getElementById('trends-content');
+                if(!container || !content) return;
+
+                var h = [];
+                try { 
+                    var data = localStorage.getItem(KEY);
+                    h = data ? JSON.parse(data) : []; 
+                } catch(e) { h = []; }
+                
+                var today = new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+                var todayLogs = h.filter(function(l) { return l && l.date === today && l.mood; });
+
+                if (todayLogs.length === 0) { 
+                    container.style.display = 'none'; 
+                    return; 
+                }
+                
+                container.style.display = 'block';
+
+                var b = todayLogs.filter(function(l) { return l.mood === 'Bliss'; }).length;
+                var o = todayLogs.filter(function(l) { return l.mood === 'Overwhelm'; }).length;
+                
+                var counts = {};
+                for (var i = 0; i < todayLogs.length; i++) {
+                    var r = todayLogs[i].reason;
+                    counts[r] = (counts[r] || 0) + 1;
+                }
+                
+                var maxVal = 0;
+                var mostFreq = "";
+                for (var key in counts) { 
+                    if (counts[key] > maxVal) { 
+                        maxVal = counts[key]; 
+                        mostFreq = key; 
+                    } 
+                }
+
+                var patternLine = (maxVal > 3) ? "The thing happening most is " + mostFreq + ", " + maxVal + " times today.<br><br>" : "";
+                
+                var feedback = "";
+                if (b > o) {
+                    feedback = " <strong>This is a great day!</strong>";
+                } else if (b === o) {
+                    feedback = " <br><br>Sounds like an ordinary day. Keep showing up, friend!";
+                } else {
+                    feedback = " <br><br><em>It's just a moment. Maybe time for an adjustment?</em>";
+                }
+
+                content.innerHTML = patternLine + "So far today, you were Blissful " + b + " times and Overwhelmed " + o + " times." + feedback;
             }
-        }
 
-        function showScreen(id) {
-            const screens = document.querySelectorAll('.screen');
-            screens.forEach(function(s) { s.classList.remove('active'); });
-            const target = document.getElementById(id);
-            if(target) {
-                target.classList.add('active');
-                if(id === 'history-screen') renderHistory();
-                if(id === 'main-screen') updateTrends();
+            function renderHistory() {
+                var list = document.getElementById('logs-list');
+                if(!list) return;
+
+                var h = [];
+                try { 
+                    var data = localStorage.getItem(KEY);
+                    h = data ? JSON.parse(data) : []; 
+                } catch(e) { h = []; }
+                
+                var valid = h.filter(function(l) { return l && l.mood && l.date; });
+
+                if (valid.length === 0) { 
+                    list.innerHTML = '<p style="text-align:center;color:#757575;padding-top:20px;">No logs yet.</p>'; 
+                    return; 
+                }
+                
+                var groups = valid.reduce(function(acc, log) {
+                    if (!acc[log.date]) acc[log.date] = [];
+                    acc[log.date].push(log);
+                    return acc;
+                }, {});
+
+                var html = "";
+                var dates = Object.keys(groups);
+                for(var i=0; i < dates.length; i++) {
+                    var date = dates[i];
+                    html += '<div class="date-group"><div class="date-header">' + date + '</div>';
+                    var items = groups[date];
+                    for(var j=0; j < items.length; j++) {
+                        var l = items[j];
+                        html += '<div class="log-item"><span><strong>' + l.mood + '</strong> (' + l.reason + ')</span><span style="color:#757575;font-size:0.85rem;">' + l.time + '</span></div>';
+                    }
+                    html += '</div>';
+                }
+                list.innerHTML = html;
             }
-        }
 
-        function openSurvey(type) {
-            const el = document.
+            window.onload = function() {
+                updateTrends();
+            };
+        })();
+    </script>
+</body>
+</html>
