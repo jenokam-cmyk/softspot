@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Softspot</title>
+    
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="manifest" href="manifest.json">
+
     <style>
         :root { --bg: #F9F8F4; --text: #2D2D2D; --accent: #E6E2D3; --white: #ffffff; }
         body { background: var(--bg); font-family: -apple-system, sans-serif; color: var(--text); display: flex; justify-content: center; margin: 0; min-height: 100vh; }
@@ -96,7 +101,7 @@
     </div>
 
     <script>
-        // MIGRATION SCRIPT: Moves data from old names to new names
+        // MIGRATION SCRIPT
         function migrate() {
             const oldData = localStorage.getItem('m');
             const newData = localStorage.getItem('softspot_logs');
@@ -104,7 +109,6 @@
                 try {
                     const parsed = JSON.parse(oldData);
                     const converted = parsed.map(l => {
-                        // Extract mood and reason from old string "Bliss (Work)"
                         let mood = "Bliss";
                         let reason = "Work";
                         if(l.entry && l.entry.includes('(')) {
@@ -175,7 +179,6 @@
                 </div>`).join('');
         }
 
-        // Run on load
         migrate();
         updateTrends();
     </script>
