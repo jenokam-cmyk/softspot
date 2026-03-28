@@ -11,68 +11,76 @@
         .app { width: 100%; max-width: 400px; padding: 20px; position: relative; }
         nav { display: flex; gap: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; font-weight: bold; }
         .mood-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card { background: var(--white); border: 1px solid var(--accent); border-radius: 20px; padding: 20px; cursor: pointer; text-align: center; }
+        .card { background: var(--white); border: 1px solid var(--accent); border-radius: 20px; padding: 25px 10px; cursor: pointer; text-align: center; }
         
-        /* The Survey Overlay */
-        #survey { 
+        .overlay { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(249, 248, 244, 0.95); z-index: 10; flex-direction: column; 
+            background: rgba(249, 248, 244, 0.98); z-index: 10; flex-direction: column; 
             justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
         }
         .survey-btn { 
             background: var(--white); border: 1px solid var(--accent); padding: 15px; 
-            margin: 5px; border-radius: 12px; width: 80%; max-width: 300px; text-align: center; font-size: 1.1rem;
+            margin: 8px; border-radius: 15px; width: 85%; max-width: 300px; text-align: center; font-size: 1.1rem;
         }
 
-        .history { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-        .log-item { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #f0f0f0; }
+        .history { margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; }
+        .log-item { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #f0f0f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .cancel { margin-top: 25px; color: #757575; text-decoration: underline; font-size: 0.9rem; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="survey">
+    <div id="survey-overwhelm" class="overlay">
         <h3>What's happening?</h3>
-        <div class="survey-btn" onclick="finishOverwhelm('Transition')">Transition</div>
-        <div class="survey-btn" onclick="finishOverwhelm('Work')">Work</div>
-        <div class="survey-btn" onclick="finishOverwhelm('Memory')">Memory</div>
-        <div class="survey-btn" onclick="finishOverwhelm('Help from friend')">Help from friend</div>
-        <p onclick="document.getElementById('survey').style.display='none'" style="margin-top:20px; color:gray;">Cancel</p>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Transition')">Transition</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Work')">Work</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Memory')">Memory</div>
+        <div class="survey-btn" onclick="finishLog('Overwhelm', 'Help from friend')">Help from friend</div>
+        <div class="cancel" onclick="closeSurveys()">Cancel</div>
+    </div>
+
+    <div id="survey-bliss" class="overlay">
+        <h3>What's happening?</h3>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Creating something')">Creating something</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Work')">Work</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Memory')">Memory</div>
+        <div class="survey-btn" onclick="finishLog('Bliss', 'Help from friend')">Help from friend</div>
+        <div class="cancel" onclick="closeSurveys()">Cancel</div>
     </div>
 
     <div class="app">
         <nav>softspot log</nav>
         <h2>Good morning.</h2>
         <div class="mood-grid">
-            <div class="card" onclick="logMood('Bliss')">✨ <br><strong>Bliss</strong></div>
-            <div class="card" onclick="showSurvey()">🌊 <br><strong>Overwhelm</strong></div>
+            <div class="card" onclick="openSurvey('bliss')">✨ <br><strong>Bliss</strong></div>
+            <div class="card" onclick="openSurvey('overwhelm')">🌊 <br><strong>Overwhelm</strong></div>
         </div>
         <div class="history"><h4>HISTORY</h4><div id="logs"></div></div>
     </div>
 
     <script>
-        // Shows the survey instead of logging immediately
-        function showSurvey() {
-            document.getElementById('survey').style.display = 'flex';
+        function openSurvey(type) {
+            document.getElementById('survey-' + type).style.display = 'flex';
         }
 
-        // Saves the mood + the specific reason
-        function finishOverwhelm(reason) {
-            logMood(`Overwhelm (${reason})`);
-            document.getElementById('survey').style.display = 'none';
+        function closeSurveys() {
+            document.getElementById('survey-bliss').style.display = 'none';
+            document.getElementById('survey-overwhelm').style.display = 'none';
         }
 
-        function logMood(m) {
+        function finishLog(mood, reason) {
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             let h = JSON.parse(localStorage.getItem('m')) || [];
-            h.unshift({ m, time });
+            h.unshift({ entry: `${mood} (${reason})`, time });
             localStorage.setItem('m', JSON.stringify(h));
+            closeSurveys();
             render();
         }
 
         function render() {
             const h = JSON.parse(localStorage.getItem('m')) || [];
             document.getElementById('logs').innerHTML = h.map(i => 
-                `<div class="log-item"><strong>${i.m}</strong> <span style="float:right; color:#757575;">${i.time}</span></div>`
+                `<div class="log-item"><strong>${i.entry}</strong> <span style="float:right; color:#757575;">${i.time}</span></div>`
             ).join('');
         }
         
