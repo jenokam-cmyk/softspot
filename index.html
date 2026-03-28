@@ -101,6 +101,16 @@
     </div>
 
     <script>
+        function getSafeLogs() {
+            try {
+                const raw = localStorage.getItem('softspot_logs');
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                console.error("Data corrupted", e);
+                return [];
+            }
+        }
+
         function migrate() {
             const oldData = localStorage.getItem('m');
             const newData = localStorage.getItem('softspot_logs');
@@ -125,7 +135,13 @@
 
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 'history-screen') renderHistory();
-            if(id === 'main-screen') updateTrends();
+            const target = document.getElementById(id);
+            if (target) {
+                target.classList.add('active');
+                if(id === 'history-screen') renderHistory();
+                if(id === 'main-screen') updateTrends();
+            }
         }
+
+        function openSurvey(type) { 
+            const el = document.getElementById('survey-' + type);
